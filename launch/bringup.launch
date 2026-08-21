@@ -29,7 +29,7 @@
   <!-- 4. rosbag 录制原始传感器数据, 用于事后离线重跑。
           -o 自动在文件名里加时间戳, 每次启动生成一个新 bag;
           rosbag 会轮询 master, 后启动的话题也能录到;
-          --split --size=4096 每 4GB 自动切分文件, 中途崩溃只丢最后一段 -->
+          split/size 参数: 每 4GB 自动切分文件, 中途崩溃只丢最后一段 -->
   <group if="$(arg record)">
     <node pkg="rosbag" type="record" name="livo2_recorder" output="screen"
           args="-o $(arg bag_dir)/livo2
