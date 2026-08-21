@@ -95,7 +95,28 @@ find_package(catkin REQUIRED COMPONENTS
 
 find_package(Eigen3 REQUIRED)
 find_package(PCL REQUIRED)
-find_package(OpenCV REQUIRED)
+
+# ============ 添加 OpenCV 4.2.0 版本限制 ============
+# 方法1：精确查找 4.2.0 版本
+find_package(OpenCV 4.2.0 EXACT REQUIRED)
+
+# 方法2：如果上面的方法找不到，可以指定路径（取消注释并修改路径）
+# set(OpenCV_DIR "/lib/x86_64-linux-gnu/cmake/opencv4")
+# find_package(OpenCV 4.2.0 EXACT REQUIRED)
+
+# 输出 OpenCV 信息用于调试
+message(STATUS "========================================")
+message(STATUS "OpenCV version found: ${OpenCV_VERSION}")
+message(STATUS "OpenCV include dirs: ${OpenCV_INCLUDE_DIRS}")
+message(STATUS "OpenCV libraries: ${OpenCV_LIBS}")
+message(STATUS "========================================")
+
+# 额外的版本检查（双重保险）
+if(NOT OpenCV_VERSION VERSION_EQUAL 4.2.0)
+    message(FATAL_ERROR "OpenCV version must be 4.2.0, but found ${OpenCV_VERSION}")
+endif()
+# ===================================================
+
 find_package(Sophus REQUIRED)
 find_package(Boost REQUIRED COMPONENTS thread)
 
@@ -139,6 +160,7 @@ target_link_libraries(fastlivo_mapping
   ${OpenCV_LIBRARIES}
   ${Sophus_LIBRARIES}
   ${Boost_LIBRARIES}
+  /usr/lib/x86_64-linux-gnu/libusb-1.0.so
 )
 
 # Link mimalloc if found

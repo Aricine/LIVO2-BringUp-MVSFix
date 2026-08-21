@@ -1,0 +1,41 @@
+<launch>
+<!-- 一次性启动: 雷达驱动 + 相机驱动 + FAST-LIVO2 建图 + rosbag 录制
+     roslaunch 会自动拉起 roscore, 无需单独启动。
+     用法: roslaunch fast_livo bringup.launch
+     关闭录制: roslaunch fast_livo bringup.launch record:=false
+     关闭 rviz: roslaunch fast_livo bringup.launch rviz:=false -->
+
+  <arg name="record" default="true"/>
+  <arg name="rviz" default="true"/>
+  <!-- bag 输出目录: 默认容器内 /root/datasets/recordings (即宿主机 ~/datasets/recordings),
+       可用环境变量 LIVO2_BAG_DIR 覆盖 -->
+  <arg name="bag_dir" default="$(optenv LIVO2_BAG_DIR /root/datasets/recordings)"/>
+
+  <!-- 1. Livox 雷达驱动 (最先启动, 由它创建时间同步共享内存 timeshare) -->
+  <include file="$(find livox_ros_driver)/launch/livox_lidar_msg.launch"/>
+
+  <!-- 2. 海康相机驱动 (延时 2 秒, 保证雷达侧 timeshare 已创建;
+          不再开 mvs 自带的 rviz, 只看 FAST-LIVO2 的) -->
+  <node pkg="mvs_ros_driver" type="grabImgWithTrigger" name="mvs_camera_trigger"
+        args="$(find mvs_ros_driver)/config/left_camera_trigger.yaml"
+        respawn="true" output="screen"
+        launch-prefix="bash -c 'sleep 2; $0 $@'"/>
+
+  <!-- 3. FAST-LIVO2 建图 (内部已含 compressed->raw 的 republish; rviz 由 rviz 参数控制) -->
+  <include file="$(find fast_livo)/launch/mapping_avia.launch">
+    <arg name="rviz" value="$(arg rviz)"/>
+  </include>
+
+  <!-- 4. rosbag 录制原始传感器数据, 用于事后离线重跑。
+          -o 自动在文件名里加时间戳, 每次启动生成一个新 bag;
+          rosbag 会轮询 master, 后启动的话题也能录到;
+          --split --size=4096 每 4GB 自动切分文件, 中途崩溃只丢最后一段 -->
+  <group if="$(arg record)">
+    <node pkg="rosbag" type="record" name="livo2_recorder" output="screen"
+          args="-o $(arg bag_dir)/livo2
+                --split --size=4096
+                /livox/lidar /livox/imu
+                /left_camera/image/compressed"/>
+  </group>
+
+</launch>

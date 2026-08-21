@@ -1,5 +1,20 @@
 # FAST-LIVO2
 
+> **本仓库是 [hku-mars/FAST-LIVO2](https://github.com/hku-mars/FAST-LIVO2) 的个人修改版**,
+> 用于海康 MVS 相机 + Livox 雷达的实机建图。相对上游的改动:
+>
+> - **修复 MVS 与 FAST-LIVO2 的 libusb 冲突**: 安装海康 MVS SDK 后会改动系统 libusb
+>   指向, 导致 FAST-LIVO2 运行报错; `CMakeLists.txt` 中显式链接
+>   `/usr/lib/x86_64-linux-gnu/libusb-1.0.so` 解决。
+> - **锁定 OpenCV 4.2.0**: `CMakeLists.txt` 要求精确版本, 避免与 cv_bridge 版本不一致。
+> - **更新标定参数**: `config/camera_pinhole.yaml` (2448×2048 海康相机内参) 和
+>   `config/avia.yaml` (相机-雷达外参), 并开启滑动窗口地图与 PCD 保存。
+> - **新增 `launch/bringup.launch`**: 一键启动雷达驱动 + 相机驱动 + 建图 + rosbag 录制。
+> - **新增 `scripts/record_bringup.sh`**: 录制会话自动归档 (bag + PCD + 位姿 + 配置快照)。
+>
+> 配套驱动包见 [Docker-LIVO2-Driver](https://github.com/Aricine/Docker-LIVO2-Driver),
+> Docker 复现环境见 [Docker_LIVO2](https://github.com/Aricine/Docker_LIVO2)。
+
 ## FAST-LIVO2: Fast, Direct LiDAR-Inertial-Visual Odometry
 
 ### 📢 News
